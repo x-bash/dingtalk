@@ -1,0 +1,180 @@
+# @src http param
+
+# author:       Li Junhao           edwin.jh.lee@gmail.com    edwinjhlee.github.io
+# maintainer:   Li Tinghui
+
+if ! declare -f @src 1>/dev/null;  then
+    : introduce the boot file
+fi
+
+@src param
+
+DINGTALK_ENDPOINT="https://oapi.dingtalk.com/robot/send?access_token=8a87f39c58cf15142a6d3728eb6eef7baa793632098bcc1d0a62ab1c61724e8a"
+
+dingtalk.bot.endpoint(){
+    if [ $# -eq 0 ]; then
+        echo "$DINGTALK_ENDPOINT"
+    else
+        DINGTALK_ENDPOINT=${1:?Provide dingtalk endpoint}
+    fi
+}
+
+dingtalk.bot.send(){
+    eval curl "$DINGTALK_ENDPOINT" \
+        -H 'Content-Type:application/json' \
+        -d "$1"
+}
+
+dingtalk.bot.send_text_msg(){
+    dingtalk.bot.send "$(content="$1" dingtalk.bot.text_msg)"
+}
+
+dingtalk.bot.text_msg(){
+    param '
+        text "Provide text"
+        picurl "Provide picurl"
+        msgurl "Provide msgurl"
+    '
+    local text
+    cat << EOM
+'{
+    "msgtype": "text",
+    "text": {
+        "content": "${content:?"Please provide content"}"
+    }
+}'
+EOM
+}
+
+dingtalk.bot.link_msg(){
+    param '
+        title "Provide title"
+        text "Provide text"
+        picurl "Provide picurl"
+        msgurl "Provide msgurl"
+    '
+
+    cat << EOM
+'{
+    "msgtype": "link",
+    "link": {
+        "text": "${text:?Provide text}",
+        "title": "${title:?Provide title}",
+        "picUrl": "${picurl:-""}",
+        "msgUrl": "${msgurl:?Provide msgurl}"
+    }
+}'
+EOM
+
+}
+
+dingtalk.bot.markdown_msg(){
+    param '
+        title "Provide title"
+        text "Provide text"
+        atMobiles "Provide at mobiles" =, int
+        atAll=true "Notify all member of the group" = true false
+    '
+
+    local content
+    cat << EOM
+'{
+    "msgtype": "markdown",
+    "markdown": {
+        "title": "${title:?"Please provide content"}",
+        "text": "${text:?"Please provide content"}"
+    },
+    "at": {
+        "atMobiles": [],
+        "atAll": true
+    }
+}'
+EOM
+
+}
+
+dingtalk.bot.action_card_msg(){
+    # trigger the initiative
+    # param.interative -i
+    
+    cat << EOM 
+'{
+    "msgtype": "actionCard",
+    "actionCard": {
+        "title": "$title",
+        "text": "$text",
+        "btnOrientation": "$orientation",
+        "singleTitle" : "阅读全文",
+        "singleURL" : "https://www.dingtalk.com/"
+    },
+    "at": {
+        "atMobiles": []
+    }
+}'
+EOM
+
+}
+
+dingtalk.bot.multiple_action_card_msg(){
+
+    param '
+        title "Provide title"
+        text "Provide text"
+        orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
+        ...rest "[...<title, url>]"
+    '
+
+    local title="${1:?Provide title}"
+    local text="${2:?Provide text}"
+    local btnOrientation="${3:-0}"
+    shift 3
+
+    local i j actionTitle url item 
+    local all=()
+    for (( i=1; i<=$#; i+=2 )); do
+        actionTitle=${!i}
+        (( j=i+1 ))
+        url=${!j}
+        item="{ \"title\": \"$actionTitle\", \"actionURL\": \"$url\" }"
+        all+=("$item")
+    done
+
+    local content
+    local IFS=','
+    cat << EOM 
+'{
+    "msgtype": "actionCard",
+    "actionCard": {
+        "title": "${title:?"Please provide content"}",
+        "text": "${text:?"Please provide content"}",
+        "btnOrientation": "${btnOrientation}",
+        "btns": [
+            ${all[*]}
+        ]
+    },
+    "at": {
+        "atMobiles": []
+    }
+}'
+EOM
+
+}
+
+dingtalk.bot.feed_card_msg(){
+    local content
+    cat << EOM
+'{
+    "msgtype": "feedCard",
+    "feedCard": {
+        "links": [
+            {
+                "title": "${title:?"Please provide content"}",
+                "messageURL": "",
+                "picURL": ""
+            }
+        ]
+    }
+}'
+EOM
+
+}
