@@ -3,13 +3,16 @@
 # author:       Li Junhao           edwin.jh.lee@gmail.com    edwinjhlee.github.io
 # maintainer:   Li Tinghui
 
-if ! declare -f @src 1>/dev/null;  then
+if ! declare -f xrc 1>/dev/null;  then
     : introduce the boot file
 fi
 
-@src param
+xrc std/param
 
 DINGTALK_ENDPOINT="https://oapi.dingtalk.com/robot/send?access_token=8a87f39c58cf15142a6d3728eb6eef7baa793632098bcc1d0a62ab1c61724e8a"
+
+# Reference
+# https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
 dingtalk.bot.endpoint(){
     if [ $# -eq 0 ]; then
@@ -26,21 +29,19 @@ dingtalk.bot.send(){
 }
 
 dingtalk.bot.send_text_msg(){
-    dingtalk.bot.send "$(content="$1" dingtalk.bot.text_msg)"
+    dingtalk.bot.send "$(dingtalk.bot.text_msg "$@")"
 }
 
 dingtalk.bot.text_msg(){
     param '
         text "Provide text"
-        picurl "Provide picurl"
-        msgurl "Provide msgurl"
     '
     local text
     cat << EOM
 '{
     "msgtype": "text",
     "text": {
-        "content": "${content:?"Please provide content"}"
+        "content": "$text"
     }
 }'
 EOM
@@ -48,20 +49,20 @@ EOM
 
 dingtalk.bot.link_msg(){
     param '
-        title "Provide title"
-        text "Provide text"
-        picurl "Provide picurl"
-        msgurl "Provide msgurl"
+        title   "Provide title"
+        text    "Provide text"
+        picurl  "Provide picurl"
+        msgurl  "Provide msgurl"
     '
 
     cat << EOM
 '{
     "msgtype": "link",
     "link": {
-        "text": "${text:?Provide text}",
-        "title": "${title:?Provide title}",
-        "picUrl": "${picurl:-""}",
-        "msgUrl": "${msgurl:?Provide msgurl}"
+        "text": "${text}",
+        "title": "${title}",
+        "picUrl": "${picurl}",
+        "msgUrl": "${msgurl}"
     }
 }'
 EOM
@@ -81,12 +82,12 @@ dingtalk.bot.markdown_msg(){
 '{
     "msgtype": "markdown",
     "markdown": {
-        "title": "${title:?"Please provide content"}",
-        "text": "${text:?"Please provide content"}"
+        "title": "$title",
+        "text": "$text"
     },
     "at": {
-        "atMobiles": [],
-        "atAll": true
+        "atMobiles": [ "${atMobiles}" ],
+        "atAll": $atAll
     }
 }'
 EOM
@@ -94,8 +95,15 @@ EOM
 }
 
 dingtalk.bot.action_card_msg(){
-    # trigger the initiative
-    # param.interative -i
+    param '
+        title "Provide title"
+        text "Provide text"
+        atMobiles "Provide at mobiles" =, int
+        atAll=true "Notify all member of the group" = true false
+        orientation=1 "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
+        singleTitle "Link title"
+        linkURL "link url"
+    '
     
     cat << EOM 
 '{
