@@ -9,8 +9,6 @@ fi
 
 xrc std/param std/oo
 
-DINGTALK_ENDPOINT="https://oapi.dingtalk.com/robot/send?access_token=8a87f39c58cf15142a6d3728eb6eef7baa793632098bcc1d0a62ab1c61724e8a"
-
 # Reference
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
@@ -22,7 +20,10 @@ dingtalk.bot.endpoint(){
 # dingtalk.bot.endpoint "$DINGTALK_ENDPOINT"
 
 dingtalk.bot.make(){
-    :
+    local O=${1:?Provide bot name}
+    if [ -n "$2" ]; then
+        dingtalk.bot.endpoint "$2"
+    fi
 }
 
 dingtalk.bot.new(){
@@ -47,6 +48,10 @@ dingtalk.bot.send(){
 }
 
 dingtalk.bot.send_text_msg(){
+    param '
+        #1 "Provide text" =str
+    '
+
     local O=${O:-default}
     dingtalk.bot.send "$(dingtalk.bot.text_msg --text "$1")"
 }
@@ -67,15 +72,22 @@ EOM
 }
 
 dingtalk.bot.send_link_msg(){
+    param '
+        title   "Provide title"     =str
+        text    "Provide text"      =str
+        picurl  "Provide picurl"    =str
+        msgurl  "Provide msgurl"    =str
+    '
+    
     dingtalk.bot.send "$(dingtalk.bot.link_msg)"
 }
 
 dingtalk.bot.link_msg(){
     param '
-        title   "Provide title"
-        text    "Provide text"
-        picurl  "Provide picurl"
-        msgurl  "Provide msgurl"
+        title   "Provide title"     =str
+        text    "Provide text"      =str
+        picurl  "Provide picurl"    =str
+        msgurl  "Provide msgurl"    =str
     '
 
     cat << EOM
