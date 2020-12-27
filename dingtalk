@@ -94,9 +94,16 @@ dingtalk.bot.send_markdown_msg(){
     param '
         title "Provide title"
         text "Provide text"
-        at "Provide at mobiles" =~, +?[0-9]+
-        atall=true "Notify all member of the group" = true false
+        at "Provide at mobiles" =~[,] +?[0-9]+
+        atall=false "Notify all member of the group" = true false
     '
+
+    # TODO: Check this code
+    local allMobiles i
+    for i in "${at[@]}"; do
+        allMobiles+=,\"$i\"
+    done
+    allMobiles=${allMobiles:1}
 
     dingtalk.bot.send << EOM
 '{
@@ -107,7 +114,7 @@ dingtalk.bot.send_markdown_msg(){
     },
     "at": {
         "atMobiles": [ "${at}" ],
-        "isAtAll": $atAll
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -150,6 +157,7 @@ dingtalk.bot.send_multiple_action_card_msg(){
         text "Provide text"
         orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
         at "Provide at mobiles" =~, +?[0-9]+
+        ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
     '
 
     local i j actionTitle url item 
@@ -188,6 +196,7 @@ dingtalk.bot.feed_card_msg(){
         title "Provide title"
         msgurl "Provide msg url"
         picurl "Provide msg url"
+        ... "Provide multiple action card in following format. [ <title> <message-url> <picture-url> ] ..."
     '
 
     dingtalk.bot.send << EOM
