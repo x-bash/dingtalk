@@ -20,10 +20,20 @@ dingtalk.bot.endpoint(){
     else
         DINGTALK_ENDPOINT=${1:?Provide dingtalk endpoint}
     fi
+
+    # param.default app/dingtalk.bot endpoint "$1"
+}
+
+dingtalk.bot.config.save(){
+    param.default.save app/dingtalk.bot "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
+}
+
+dingtalk.bot.config.load(){
+    param.default.load app/dingtalk.bot "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
 }
 
 dingtalk.bot.send(){
-    eval curl "$DINGTALK_ENDPOINT" \
+    echo curl "$DINGTALK_ENDPOINT" \
         -H 'Content-Type:application/json' \
         -d "$1"
 }
@@ -34,7 +44,7 @@ dingtalk.bot.send_text_msg(){
 
 dingtalk.bot.text_msg(){
     param '
-        text "Provide text"
+        text "Provide text" =str
     '
     local text
     cat << EOM
@@ -73,7 +83,7 @@ dingtalk.bot.markdown_msg(){
     param '
         title "Provide title"
         text "Provide text"
-        atMobiles "Provide at mobiles" =, int
+        atMobiles "Provide at mobiles" =~, +?[0-9]+
         atAll=true "Notify all member of the group" = true false
     '
 
@@ -96,13 +106,13 @@ EOM
 
 dingtalk.bot.action_card_msg(){
     param '
-        title "Provide title"
-        text "Provide text"
-        atMobiles "Provide at mobiles" =, int
-        atAll=true "Notify all member of the group" = true false
-        orientation=1 "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
-        singleTitle "Link title"
-        linkURL "link url"
+        title   "Provide title"
+        text    "Provide text"
+        at      "Provide at mobiles" =, int
+        atall=true      "Notify all member of the group" = true false
+        orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
+        linktitle       "Link title"
+        linkurl         "link url"
     '
     
     cat << EOM 
@@ -112,8 +122,8 @@ dingtalk.bot.action_card_msg(){
         "title": "$title",
         "text": "$text",
         "btnOrientation": "$orientation",
-        "singleTitle" : "阅读全文",
-        "singleURL" : "https://www.dingtalk.com/"
+        "singleTitle" : "$linktitle",
+        "singleURL" : "$linkurl"
     },
     "at": {
         "atMobiles": []
@@ -176,9 +186,9 @@ dingtalk.bot.feed_card_msg(){
     "feedCard": {
         "links": [
             {
-                "title": "${title:?"Please provide content"}",
-                "messageURL": "",
-                "picURL": ""
+                "title": "$title",
+                "messageURL": "$msgurl",
+                "picURL": "$picurl"
             }
         ]
     }
