@@ -95,7 +95,7 @@ dingtalk.bot.send_markdown_msg(){
         title "Provide title"
         text "Provide text"
         at "Provide at mobiles" =~, +?[0-9]+
-        atAll=true "Notify all member of the group" = true false
+        atall=true "Notify all member of the group" = true false
     '
 
     dingtalk.bot.send << EOM
@@ -107,7 +107,7 @@ dingtalk.bot.send_markdown_msg(){
     },
     "at": {
         "atMobiles": [ "${at}" ],
-        "atAll": $atAll
+        "atAll": $atall
     }
 }'
 EOM
@@ -167,7 +167,6 @@ dingtalk.bot.send_multiple_action_card_msg(){
         all+=("$item")
     done
 
-    local content
     local IFS=','
     dingtalk.bot.send << EOM 
 '{
