@@ -14,7 +14,7 @@ xrc std/param std/oo
 
 dingtalk.bot.endpoint(){
     local O=${O:-default.bot}
-    eval param.default "app/dingtalk.bot/$O" endpoint "$1"
+    param.default "app/dingtalk.bot/$O" endpoint "$1"
 }
 
 # dingtalk.bot.endpoint "$DINGTALK_ENDPOINT"
@@ -40,11 +40,17 @@ dingtalk.bot.config.load(){
     param.default.load "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
 }
 
+# shellcheck disable=SC2120
 dingtalk.bot.send(){
     local O=${O:-default}
+    local json="$1"
+    if [ -z "$json" ]; then
+        json="$(cat)"
+    fi
+
     eval curl "$(param.default "app/dingtalk.bot/$O" endpoint)" \
         -H 'Content-Type:application/json' \
-        -d "$1"
+        -d "$json"
 }
 
 dingtalk.bot.send_text_msg(){
@@ -52,20 +58,11 @@ dingtalk.bot.send_text_msg(){
         #1 "Provide text" =str
     '
 
-    local O=${O:-default}
-    dingtalk.bot.send "$(dingtalk.bot.text_msg --text "$1")"
-}
-
-dingtalk.bot.text_msg(){
-    param '
-        text "Provide text" =str
-    '
-    local text
-    cat << EOM
+    dingtalk.bot.send << EOM
 '{
     "msgtype": "text",
     "text": {
-        "content": "$text"
+        "content": "$1"
     }
 }'
 EOM
@@ -79,18 +76,7 @@ dingtalk.bot.send_link_msg(){
         msgurl  "Provide msgurl"    =str
     '
     
-    dingtalk.bot.send "$(dingtalk.bot.link_msg)"
-}
-
-dingtalk.bot.link_msg(){
-    param '
-        title   "Provide title"     =str
-        text    "Provide text"      =str
-        picurl  "Provide picurl"    =str
-        msgurl  "Provide msgurl"    =str
-    '
-
-    cat << EOM
+    dingtalk.bot.send << EOM
 '{
     "msgtype": "link",
     "link": {
@@ -104,16 +90,15 @@ EOM
 
 }
 
-dingtalk.bot.markdown_msg(){
+dingtalk.bot.send_markdown_msg(){
     param '
         title "Provide title"
         text "Provide text"
-        atMobiles "Provide at mobiles" =~, +?[0-9]+
+        at "Provide at mobiles" =~, +?[0-9]+
         atAll=true "Notify all member of the group" = true false
     '
 
-    local content
-    cat << EOM
+    dingtalk.bot.send << EOM
 '{
     "msgtype": "markdown",
     "markdown": {
@@ -121,26 +106,26 @@ dingtalk.bot.markdown_msg(){
         "text": "$text"
     },
     "at": {
-        "atMobiles": [ "${atMobiles}" ],
+        "atMobiles": [ "${at}" ],
         "atAll": $atAll
     }
 }'
 EOM
-
 }
 
-dingtalk.bot.action_card_msg(){
+dingtalk.bot.send_action_card_msg(){
     param '
         title   "Provide title"
         text    "Provide text"
-        at      "Provide at mobiles" =, int
+        at "Provide at mobiles" =~, +?[0-9]+
         atall=true      "Notify all member of the group" = true false
         orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
         linktitle       "Link title"
         linkurl         "link url"
     '
     
-    cat << EOM 
+    local O=${O:-default}
+    dingtalk.bot.send << EOM 
 '{
     "msgtype": "actionCard",
     "actionCard": {
@@ -151,20 +136,20 @@ dingtalk.bot.action_card_msg(){
         "singleURL" : "$linkurl"
     },
     "at": {
-        "atMobiles": []
+        "atMobiles": [ $at ]
     }
 }'
 EOM
 
 }
 
-dingtalk.bot.multiple_action_card_msg(){
+dingtalk.bot.send_multiple_action_card_msg(){
 
     param '
         title "Provide title"
         text "Provide text"
         orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
-        ...rest "[...<title, url>]"
+        at "Provide at mobiles" =~, +?[0-9]+
     '
 
     local title="${1:?Provide title}"
@@ -174,17 +159,17 @@ dingtalk.bot.multiple_action_card_msg(){
 
     local i j actionTitle url item 
     local all=()
-    for (( i=1; i<=$#; i+=2 )); do
-        actionTitle=${!i}
+    for (( i=1; i<="${#_rest_argv[@]}"; i+=2 )); do
+        actionTitle=${_rest_argv[i]}
         (( j=i+1 ))
-        url=${!j}
+        url=${_rest_argv[j]}
         item="{ \"title\": \"$actionTitle\", \"actionURL\": \"$url\" }"
         all+=("$item")
     done
 
     local content
     local IFS=','
-    cat << EOM 
+    dingtalk.bot.send << EOM 
 '{
     "msgtype": "actionCard",
     "actionCard": {
@@ -196,7 +181,7 @@ dingtalk.bot.multiple_action_card_msg(){
         ]
     },
     "at": {
-        "atMobiles": []
+        "atMobiles": [ "$at" ]
     }
 }'
 EOM
@@ -204,8 +189,14 @@ EOM
 }
 
 dingtalk.bot.feed_card_msg(){
-    local content
-    cat << EOM
+
+    param '
+        title "Provide title"
+        msgurl "Provide msg url"
+        picurl "Provide msg url"
+    '
+
+    dingtalk.bot.send << EOM
 '{
     "msgtype": "feedCard",
     "feedCard": {
