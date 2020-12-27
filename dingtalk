@@ -13,8 +13,21 @@ xrc std/param std/oo
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
 dingtalk.bot.endpoint(){
-    local O=${O:-default.bot}
-    param.default "app/dingtalk.bot/$O" endpoint "$1"
+    local O=${O:-default} endpoint
+
+    if [ -n "$1" ]; then    # set
+        param.default "app/dingtalk.bot/$O" endpoint "$1"
+        return 0
+    fi
+    
+    # get
+    endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
+    if [ -z "$endpoint" ]; then
+        dingtalk.bot.config.load && endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
+    fi
+
+    [ -z "$endpoint" ] && return 1
+    echo "$endpoint"
 }
 
 # dingtalk.bot.endpoint "$DINGTALK_ENDPOINT"
@@ -48,7 +61,7 @@ dingtalk.bot.send(){
         json="$(cat)"
     fi
 
-    eval curl "$(param.default "app/dingtalk.bot/$O" endpoint)" \
+    eval curl "$(dingtalk.bot.endpoint)" \
         -H 'Content-Type:application/json' \
         -d "$json"
 }
