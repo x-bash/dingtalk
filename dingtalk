@@ -83,7 +83,7 @@ dingtalk.bot.send_link_msg(){
         "text": "${text}",
         "title": "${title}",
         "picUrl": "${picurl}",
-        "msgUrl": "${msgurl}"
+        "messageUrl": "${msgurl}"
     }
 }'
 EOM
