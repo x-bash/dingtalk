@@ -7,7 +7,7 @@ if ! declare -f xrc 1>/dev/null;  then
     : introduce the boot file
 fi
 
-xrc std/param
+xrc std/param std/oo
 
 DINGTALK_ENDPOINT="https://oapi.dingtalk.com/robot/send?access_token=8a87f39c58cf15142a6d3728eb6eef7baa793632098bcc1d0a62ab1c61724e8a"
 
@@ -15,31 +15,40 @@ DINGTALK_ENDPOINT="https://oapi.dingtalk.com/robot/send?access_token=8a87f39c58c
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
 dingtalk.bot.endpoint(){
-    if [ $# -eq 0 ]; then
-        echo "$DINGTALK_ENDPOINT"
-    else
-        DINGTALK_ENDPOINT=${1:?Provide dingtalk endpoint}
-    fi
+    local O=${O:-default.bot}
+    eval param.default "app/dingtalk.bot/$O" endpoint "$1"
+}
 
-    # param.default app/dingtalk.bot endpoint "$1"
+# dingtalk.bot.endpoint "$DINGTALK_ENDPOINT"
+
+dingtalk.bot.make(){
+    :
+}
+
+dingtalk.bot.new(){
+    oo.create_new_function dingtalk.bot "$@"
 }
 
 dingtalk.bot.config.save(){
-    param.default.save app/dingtalk.bot "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
+    local O=${O:-default}
+    param.default.save "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
 }
 
 dingtalk.bot.config.load(){
-    param.default.load app/dingtalk.bot "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
+    local O=${O:-default}
+    param.default.load "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
 }
 
 dingtalk.bot.send(){
-    echo curl "$DINGTALK_ENDPOINT" \
+    local O=${O:-default}
+    eval curl "$(param.default "app/dingtalk.bot/$O" endpoint)" \
         -H 'Content-Type:application/json' \
         -d "$1"
 }
 
 dingtalk.bot.send_text_msg(){
-    dingtalk.bot.send "$(dingtalk.bot.text_msg "$@")"
+    local O=${O:-default}
+    dingtalk.bot.send "$(dingtalk.bot.text_msg --text "$1")"
 }
 
 dingtalk.bot.text_msg(){
@@ -55,6 +64,10 @@ dingtalk.bot.text_msg(){
     }
 }'
 EOM
+}
+
+dingtalk.bot.send_link_msg(){
+    dingtalk.bot.send "$(dingtalk.bot.link_msg)"
 }
 
 dingtalk.bot.link_msg(){
