@@ -15,7 +15,9 @@ text="
 #### 杭州天气 @150XXXXXXXX \n> 9度，西北风1级，空气良89，相对温度73%\n> ![screenshot](https://img.alicdn.com/tfs/TB1NwmBEL9TBuNjy1zbXXXpepXa-2400-1218.png)\n> ###### 10点20分发布 [天气](https://www.dingtalk.com) \n
 "
 
-a.send_markdown_msg --title "test send markdown msg" --text "${text}"  --atAll false 
+a.send_markdown_msg --title "test send markdown msg" --text "${text}"  --at "+86-15018419761" # --atAll false 
+
+exit 0
 
 a.send_link_msg --title "test link msg" \
     --text "test case for send_link_msg" \
