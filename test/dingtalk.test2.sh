@@ -3,7 +3,7 @@
 . dingtalk
 
 dingtalk.debug.enable
-dingtalk.debug.disable
+# dingtalk.debug.disable
 
 dingtalk.bot.new a "https://oapi.dingtalk.com/robot/send?access_token=3aa24e28b280b5f0576d7c77a6ff86c36c5f7be32a8491fd1a2b751459031cdd"
 
@@ -16,7 +16,7 @@ text="
     ## Hangzhou weather @150XXXXXXXXXX \n> 9 degrees, northwest wind 1, good air 89, relative temperature 73% \n> ! [screenshot](https://img.alicdn.com/tfs/TB1NwmBEL9TBuNjy1zbXXXpepXa-2400-1218.png)\n> ###### posted at 10:20 [weather](https://www.dingtalk. com) \n
     "
 
-a.send_markdown_msg --title "test case for send_markdown_msg" --text "${text}" --at "13427498660,13238325221,13238325221"  --atall false
+a.send_markdown_msg --title "test case for send_markdown_msg" --text "${text}" --at "+8613427498660,13427498660,13238325221"  --atall false
 
 a.send_link_msg \
     --title "test case for send_markdown_msg" \
@@ -28,10 +28,10 @@ a.send_action_card_msg \
     --title "test send_action_card_msg" \
     --text "test case for send action card msg
         ! [screenshot](https://gw.alicdn.com/tfs/TB1ut3xxbsrBKNjSZFpXXcXhFXa-846-786.png) 
-
         ## The Apple Cafe that Steve Jobs wanted to build 20 years ago 
         The Apple Store design is moving from being full of technology to living, and its living can be traced back 20 years to a plan by Apple to build a cafe
         " \
+    --at "+8613427498660,13427498660,13238325221" \
     --linktitle "Read More" \
     --linkurl "https://www.dingtalk.com/"
 
@@ -41,6 +41,7 @@ a.send_multiple_action_card_msg \
         ## The Apple Cafe that Steve Jobs wanted to create 20 years ago 
         The Apple Store design is moving from being full of technology to life, and the move to life can be traced back 20 years to an Apple plan to build a cafe" \
     --orientation 0 \
+    --at "+8613427498660,13427498660,13238325221" \
     aaa aaaUrl bbb bbbUrl
 
 a.feed_card_msg \

@@ -113,11 +113,10 @@ dingtalk.bot.send_markdown_msg() {
     param '
         title "Provide title"
         text "Provide text"
-        at "Provide at mobiles" =~[,] [0-9]+
+        at "Provide at mobiles" =~[,] \\+?[0-9]+
         atall=false "Notify all member of the group" = true false
     '
 
-    # TODO: Check this code
     local allMobiles i
     for i in "${at[@]}"; do
         allMobiles+=,\"$i\"
@@ -143,12 +142,18 @@ dingtalk.bot.send_action_card_msg() {
     param '
         title   "Provide title"
         text    "Provide text"
-        at "Provide at mobiles" =~, +?[0-9]+
-        atall=false      "Notify all member of the group" = true false
+        at      "Provide at mobiles" =~, \\+?[0-9]+
+        atall=false     "Notify all member of the group" = true false
         orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
         linktitle       "Link title"
         linkurl         "link url"
     '
+
+    local allMobiles i
+    for i in "${at[@]}"; do
+        allMobiles+=,\"$i\"
+    done
+    allMobiles=${allMobiles:1}
 
     local O=${O:-default}
     dingtalk.bot.send <<EOM
@@ -162,7 +167,7 @@ dingtalk.bot.send_action_card_msg() {
         "singleURL" : "$linkurl"
     },
     "at": {
-        "atMobiles": [ $at ]
+        "atMobiles": [ ${allMobiles} ]
     }
 }'
 EOM
@@ -172,10 +177,10 @@ EOM
 dingtalk.bot.send_multiple_action_card_msg() {
 
     param '
-        title "Provide title"
-        text "Provide text"
+        title   "Provide title"
+        text    "Provide text"
         orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
-        at "Provide at mobiles" =~, +?[0-9]+
+        at            "Provide at mobiles" =~, \\+?[0-9]+
         ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
     '
 
@@ -188,6 +193,12 @@ dingtalk.bot.send_multiple_action_card_msg() {
         item="{ \"title\": \"$actionTitle\", \"actionURL\": \"$url\" }"
         all+=("$item")
     done
+
+    local allMobiles i
+    for i in "${at[@]}"; do
+        allMobiles+=,\"$i\"
+    done
+    allMobiles=${allMobiles:1}
 
     local IFS=','
     dingtalk.bot.send <<EOM
@@ -202,7 +213,7 @@ dingtalk.bot.send_multiple_action_card_msg() {
         ]
     },
     "at": {
-        "atMobiles": [ "$at" ]
+        "atMobiles": [ "${allMobiles}" ]
     }
 }'
 EOM
