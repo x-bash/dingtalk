@@ -9,6 +9,8 @@ fi
 
 xrc std/param std/oo
 
+x.debug.init dingtalk
+
 # Reference
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
@@ -61,7 +63,11 @@ dingtalk.bot.send() {
         json="$(cat)"
     fi
 
-    echo curl "$(dingtalk.bot.endpoint)" \
+    eval curl "$(dingtalk.bot.endpoint)" \
+        -H 'Content-Type:application/json' \
+        -d "$json"
+
+    dingtalk.debug curl "$(dingtalk.bot.endpoint)" \
         -H 'Content-Type:application/json' \
         -d "$json"
 }
@@ -138,7 +144,7 @@ dingtalk.bot.send_action_card_msg() {
         title   "Provide title"
         text    "Provide text"
         at "Provide at mobiles" =~, +?[0-9]+
-        atAll=true      "Notify all member of the group" = true false
+        atall=false      "Notify all member of the group" = true false
         orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
         linktitle       "Link title"
         linkurl         "link url"
