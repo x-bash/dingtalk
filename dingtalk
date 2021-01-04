@@ -74,14 +74,32 @@ dingtalk.bot.send() {
 
 dingtalk.bot.send_text_msg() {
     param '
-        #1 "Provide text" =str
+        text         "Provide text" =str
+        at=""      "The cell phone number of the person being @ (in the text content should have @ cell phone number)" =~[,] \\+?[0-9]+
+        --atall -a "Notify all member of the group"
     '
+
+    local allMobiles i
+    for i in "${at[@]}"; do
+        allMobiles+=,\"$i\"
+    done
+    allMobiles=${allMobiles:1}
+
+    if [ "$atall" ]; then
+        atall=true
+    else 
+        atall=false
+    fi
 
     dingtalk.bot.send <<EOM
 '{
     "msgtype": "text",
     "text": {
-        "content": "$1"
+        "content": "$text"
+    },
+    "at": {
+        "atMobiles": [ ${allMobiles} ],
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -111,10 +129,10 @@ EOM
 
 dingtalk.bot.send_markdown_msg() {
     param '
-        title "Provide title"
-        text "Provide text"
-        at "Provide at mobiles" =~[,] \\+?[0-9]+
-        atall=false "Notify all member of the group" = true false
+        title      "Provide title"
+        text       "Provide text"
+        at=""      "The cell phone number of the person being @ (in the text content should have @ cell phone number)" =~[,] \\+?[0-9]+
+        --atall -a "Notify all member of the group"
     '
 
     local allMobiles i
@@ -122,6 +140,12 @@ dingtalk.bot.send_markdown_msg() {
         allMobiles+=,\"$i\"
     done
     allMobiles=${allMobiles:1}
+
+    if [ "$atall" ]; then
+        atall=true
+    else 
+        atall=false
+    fi
 
     dingtalk.bot.send <<EOM
 '{
@@ -140,20 +164,19 @@ EOM
 
 dingtalk.bot.send_action_card_msg() {
     param '
-        title   "Provide title"
-        text    "Provide text"
-        at      "Provide at mobiles" =~, \\+?[0-9]+
-        atall=false     "Notify all member of the group" = true false
-        orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
+        title           "Provide title"
+        text            "Provide text"
+        --atall         "Notify all member of the group"
+        orientation=vertical   "Buttons Placenment. default is vertical" == vertical horizontal
         linktitle       "Link title"
         linkurl         "link url"
     '
 
-    local allMobiles i
-    for i in "${at[@]}"; do
-        allMobiles+=,\"$i\"
-    done
-    allMobiles=${allMobiles:1}
+    if [ "$orientation" = "horizontal" ]; then
+        orientation=1
+    else 
+        orientation=0
+    fi
 
     local O=${O:-default}
     dingtalk.bot.send <<EOM
@@ -167,7 +190,7 @@ dingtalk.bot.send_action_card_msg() {
         "singleURL" : "$linkurl"
     },
     "at": {
-        "atMobiles": [ ${allMobiles} ]
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -177,10 +200,9 @@ EOM
 dingtalk.bot.send_multiple_action_card_msg() {
 
     param '
-        title   "Provide title"
-        text    "Provide text"
-        orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
-        at            "Provide at mobiles" =~, \\+?[0-9]+
+        title         "Provide title"
+        text          "Provide text"
+        orientation=0 "button orientation, horizontal, default is vertical" int vertical 1
         ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
     '
 
