@@ -7,9 +7,9 @@ if ! declare -f xrc 1>/dev/null; then
     : introduce the boot file
 fi
 
-xrc std/param std/oo
+xrc std/param std/oo std/json
 
-x.debug.init dingtalk
+debug.init dingtalk
 
 # Reference
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
