@@ -74,7 +74,7 @@ dingtalk.bot.send() {
 
 dingtalk.bot.send_text_msg() {
     param '
-        text         "Provide text" =str
+        text       "Provide text" =str
         at=""      "The cell phone number of the person being @ (in the text content should have @ cell phone number)" =~[,] \\+?[0-9]+
         --atall -a "Notify all member of the group"
     '
@@ -85,11 +85,7 @@ dingtalk.bot.send_text_msg() {
     done
     allMobiles=${allMobiles:1}
 
-    if [ "$atall" ]; then
-        atall=true
-    else 
-        atall=false
-    fi
+    [[ "$atall" ]] && atall=true || atall=false
 
     dingtalk.bot.send <<EOM
 '{
@@ -141,18 +137,14 @@ dingtalk.bot.send_markdown_msg() {
     done
     allMobiles=${allMobiles:1}
 
-    if [ "$atall" ]; then
-        atall=true
-    else 
-        atall=false
-    fi
+    [[ "$atall" ]] && atall=true || atall=false
 
     dingtalk.bot.send <<EOM
 '{
     "msgtype": "markdown",
     "markdown": {
         "title": "$title",
-        "text": "$text"
+        "text":  "$text"
     },
     "at": {
         "atMobiles": [ ${allMobiles} ],
@@ -172,11 +164,7 @@ dingtalk.bot.send_action_card_msg() {
         linkurl         "link url"
     '
 
-    if [ "$orientation" = "horizontal" ]; then
-        orientation=1
-    else 
-        orientation=0
-    fi
+    [[ "$orientation" = "horizontal" ]] && orientation=1 || orientation=0
 
     local O=${O:-default}
     dingtalk.bot.send <<EOM
@@ -184,10 +172,10 @@ dingtalk.bot.send_action_card_msg() {
     "msgtype": "actionCard",
     "actionCard": {
         "title": "$title",
-        "text": "$text",
+        "text":  "$text",
         "btnOrientation": "$orientation",
-        "singleTitle" : "$linktitle",
-        "singleURL" : "$linkurl"
+        "singleTitle" :   "$linktitle",
+        "singleURL" :     "$linkurl"
     },
     "at": {
         "isAtAll": $atall
@@ -202,7 +190,7 @@ dingtalk.bot.send_multiple_action_card_msg() {
     param '
         title         "Provide title"
         text          "Provide text"
-        orientation=0 "button orientation, horizontal, default is vertical" int vertical 1
+        orientation=vertical   "Buttons Placenment. default is vertical" == vertical horizontal
         ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
     '
 
@@ -236,6 +224,7 @@ dingtalk.bot.send_multiple_action_card_msg() {
     },
     "at": {
         "atMobiles": [ "${allMobiles}" ]
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -243,7 +232,9 @@ EOM
 }
 
 dingtalk.bot.feed_card_msg() {
-    param ''
+    param '
+        ... "Provide multiple feed card in following format. [ <title> <message-url> <picture-url> ] ..."
+    '
 
     for ((i = 0; i < "${#_rest_argv[@]}"; i += 3)); do
         actionTitle=${_rest_argv[i]}
