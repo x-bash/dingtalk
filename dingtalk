@@ -1,19 +1,20 @@
-# @src http param
+# shellcheck shell=sh disable=SC2039
 
 # author:       Li Junhao           edwin.jh.lee@gmail.com    edwinjhlee.github.io
 # maintainer:   Li Tinghui
 
-if ! declare -f xrc 1>/dev/null;  then
-    : introduce the boot file
-fi
+# if ! declare -f xrc 1>/dev/null;  then
+#     : introduce the boot file
+# fi
 
-xrc std/param std/oo
+xrc param/v0 oo/v0
 
 # Reference
 # https://ding-doc.dingtalk.com/document#/isv-dev-guide/message-types-and-data-format#topic-2618201
 
-dingtalk.bot.endpoint(){
-    local O=${O:-default} endpoint
+dingtalk_bot_endpoint(){
+    local O=${O:-default} 
+    local endpoint
 
     if [ -n "$1" ]; then    # set
         param.default "app/dingtalk.bot/$O" endpoint "$1"
@@ -23,55 +24,55 @@ dingtalk.bot.endpoint(){
     # get
     endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
     if [ -z "$endpoint" ]; then
-        dingtalk.bot.config.load && endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
+        dingtalk_bot_config.load && endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
     fi
 
     [ -z "$endpoint" ] && return 1
     echo "$endpoint"
 }
 
-# dingtalk.bot.endpoint "$DINGTALK_ENDPOINT"
+# dingtalk_bot_endpoint "$DINGTALK_ENDPOINT"
 
-dingtalk.bot.make(){
+dingtalk_bot_make(){
     local O=${1:?Provide bot name}
     if [ -n "$2" ]; then
-        dingtalk.bot.endpoint "$2"
+        dingtalk_bot_endpoint "$2"
     fi
 }
 
-dingtalk.bot.new(){
+dingtalk_bot_new(){
     oo.create_new_function dingtalk.bot "$@"
 }
 
-dingtalk.bot.config.save(){
+dingtalk_bot_config.save(){
     local O=${O:-default}
-    param.default.save "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
+    param.default.save "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.app.dingtalk.config}"
 }
 
-dingtalk.bot.config.load(){
+dingtalk_bot_config.load(){
     local O=${O:-default}
     param.default.load "app/dingtalk.bot/$O" "${1:?$HOME/.x-cmd.com/config/x-bash/.dingtalk.config}"
 }
 
 # shellcheck disable=SC2120
-dingtalk.bot.send(){
+dingtalk_bot_send(){
     local O=${O:-default}
     local json="$1"
     if [ -z "$json" ]; then
         json="$(cat)"
     fi
 
-    eval curl "$(dingtalk.bot.endpoint)" \
+    eval curl "$(dingtalk_bot_endpoint)" \
         -H 'Content-Type:application/json' \
         -d "$json"
 }
 
-dingtalk.bot.send_text_msg(){
+dingtalk_bot_send_text_msg(){
     param '
         #1 "Provide text" =str
     '
 
-    dingtalk.bot.send << EOM
+    dingtalk_bot_send << EOM
 '{
     "msgtype": "text",
     "text": {
@@ -81,15 +82,15 @@ dingtalk.bot.send_text_msg(){
 EOM
 }
 
-dingtalk.bot.send_link_msg(){
-    param '
-        title   "Provide title"     =str
-        text    "Provide text"      =str
-        picurl  "Provide picurl"    =str
-        msgurl  "Provide msgurl"    =str
-    '
+dingtalk_bot_send_link_msg(){
+    param <<A
+    --title   "Provide title"     =str
+    --text    "Provide text"      =str
+    --picurl  "Provide picurl"    =str
+    --msgurl  "Provide msgurl"    =str
+A
     
-    dingtalk.bot.send << EOM
+    dingtalk_bot_send << EOM
 '{
     "msgtype": "link",
     "link": {
@@ -103,22 +104,17 @@ EOM
 
 }
 
-dingtalk.bot.send_markdown_msg(){
-    param '
-        title "Provide title"
-        text "Provide text"
-        at "Provide at mobiles" =~[,] +?[0-9]+
-        atall=false "Notify all member of the group" = true false
-    '
+dingtalk_bot_send_markdown_msg(){
+    param <<A
+    --title "Provide title"
+    --text "Provide text"
+    --at "Provide at mobiles" =~, +?[0-9]+
+    --atall=false "Notify all member of the group" = true false
+A
 
     # TODO: Check this code
-    local allMobiles i
-    for i in "${at[@]}"; do
-        allMobiles+=,\"$i\"
-    done
-    allMobiles=${allMobiles:1}
 
-    dingtalk.bot.send << EOM
+    dingtalk_bot_send << EOM
 '{
     "msgtype": "markdown",
     "markdown": {
@@ -133,19 +129,19 @@ dingtalk.bot.send_markdown_msg(){
 EOM
 }
 
-dingtalk.bot.send_action_card_msg(){
-    param '
-        title   "Provide title"
-        text    "Provide text"
-        at "Provide at mobiles" =~, +?[0-9]+
-        atall=true      "Notify all member of the group" = true false
-        orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
-        linktitle       "Link title"
-        linkurl         "link url"
-    '
+dingtalk_bot_send_action_card_msg(){
+    param <<A
+    --title   "Provide title"
+    --text    "Provide text"
+    --at "Provide at mobiles" =~, +?[0-9]+
+    --atall=true      "Notify all member of the group" = true false
+    --orientation=1   "Buttons Placenment. 0=vertical. 1=horizontal" = 0 1
+    --linktitle       "Link title"
+    --linkurl         "link url"
+A
     
     local O=${O:-default}
-    dingtalk.bot.send << EOM 
+    dingtalk_bot_send << EOM 
 '{
     "msgtype": "actionCard",
     "actionCard": {
@@ -163,28 +159,31 @@ EOM
 
 }
 
-dingtalk.bot.send_multiple_action_card_msg(){
+dingtalk_bot_send_multiple_action_card_msg(){
 
-    param '
-        title "Provide title"
-        text "Provide text"
-        orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
-        at "Provide at mobiles" =~, +?[0-9]+
-        ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
-    '
+    param <<A
+    --title "Provide title"
+    --text "Provide text"
+    --orientation=0 "button orientation 0 = vertical, 1=horizontal, default is 0" int 0 1
+    --at "Provide at mobiles" =~, +?[0-9]+
+    ... "Provide multiple action card in following format. [ <title> <action-url> ] ..."
+A
 
-    local i j actionTitle url item 
-    local all=()
-    for (( i=0; i<"${#_rest_argv[@]}"; i+=2 )); do
-        actionTitle=${_rest_argv[i]}
-        (( j=i+1 ))
-        url=${_rest_argv[j]}
+    local actionTitle 
+    local url
+    local item 
+    local all=""
+
+    while [ $# -gt 0 ]; do
+        actionTitle="$1"
+        url="$2"
         item="{ \"title\": \"$actionTitle\", \"actionURL\": \"$url\" }"
-        all+=("$item")
+        all="${all:+"$all,"}$item"
+        shift 2
     done
 
     local IFS=','
-    dingtalk.bot.send << EOM 
+    dingtalk_bot_send << EOM 
 '{
     "msgtype": "actionCard",
     "actionCard": {
@@ -192,7 +191,7 @@ dingtalk.bot.send_multiple_action_card_msg(){
         "text": "${text:?"Please provide content"}",
         "btnOrientation": "${orientation}",
         "btns": [
-            ${all[*]}
+            $all
         ]
     },
     "at": {
@@ -203,16 +202,16 @@ EOM
 
 }
 
-dingtalk.bot.feed_card_msg(){
+dingtalk_bot_feed_card_msg(){
 
-    param '
-        title "Provide title"
-        msgurl "Provide msg url"
-        picurl "Provide msg url"
-        ... "Provide multiple action card in following format. [ <title> <message-url> <picture-url> ] ..."
-    '
+    param <<A
+    --title "Provide title"
+    --msgurl "Provide msg url"
+    --picurl "Provide msg url"
+    ... "Provide multiple action card in following format. [ <title> <message-url> <picture-url> ] ..."
+A
 
-    dingtalk.bot.send << EOM
+    dingtalk_bot_send << EOM
 '{
     "msgtype": "feedCard",
     "feedCard": {
