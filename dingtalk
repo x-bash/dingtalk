@@ -16,11 +16,11 @@ dingtalk_bot_endpoint(){
     local O=${O:-default} 
     local endpoint
 
-    if [ -n "$1" ]; then    # set
+    if [ -n "$1" ]; then # set
         param.default "app/dingtalk.bot/$O" endpoint "$1"
         return 0
     fi
-    
+
     # get
     endpoint="$(param.default "app/dingtalk.bot/$O" endpoint)"
     if [ -z "$endpoint" ]; then
@@ -65,18 +65,28 @@ dingtalk_bot_send(){
     eval curl "$(dingtalk_bot_endpoint)" \
         -H 'Content-Type:application/json' \
         -d "$json"
+
+    dingtalk.debug curl "$(dingtalk.bot.endpoint)" \
+        -H 'Content-Type:application/json' \
+        -d "$json"
 }
 
 dingtalk_bot_send_text_msg(){
     param '
-        #1 "Provide text" =str
+        text       "Provide text" =str
+        at=""      "The cell phone number of the person being @ (in the text content should have @ cell phone number)" =~[,] \\+?[0-9]+
+        --atall -a "Notify all member of the group"
     '
 
     dingtalk_bot_send << EOM
 '{
     "msgtype": "text",
     "text": {
-        "content": "$1"
+        "content": "$text"
+    },
+    "at": {
+        "atMobiles": [ ${allMobiles} ],
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -119,10 +129,10 @@ A
     "msgtype": "markdown",
     "markdown": {
         "title": "$title",
-        "text": "$text"
+        "text":  "$text"
     },
     "at": {
-        "atMobiles": [ "${at}" ],
+        "atMobiles": [ ${allMobiles} ],
         "isAtAll": $atall
     }
 }'
@@ -146,13 +156,13 @@ A
     "msgtype": "actionCard",
     "actionCard": {
         "title": "$title",
-        "text": "$text",
+        "text":  "$text",
         "btnOrientation": "$orientation",
-        "singleTitle" : "$linktitle",
-        "singleURL" : "$linkurl"
+        "singleTitle" :   "$linktitle",
+        "singleURL" :     "$linkurl"
     },
     "at": {
-        "atMobiles": [ $at ]
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -182,6 +192,12 @@ A
         shift 2
     done
 
+    local allMobiles i
+    for i in "${at[@]}"; do
+        allMobiles+=,\"$i\"
+    done
+    allMobiles=${allMobiles:1}
+
     local IFS=','
     dingtalk_bot_send << EOM 
 '{
@@ -195,7 +211,8 @@ A
         ]
     },
     "at": {
-        "atMobiles": [ "$at" ]
+        "atMobiles": [ "${allMobiles}" ]
+        "isAtAll": $atall
     }
 }'
 EOM
@@ -216,11 +233,7 @@ A
     "msgtype": "feedCard",
     "feedCard": {
         "links": [
-            {
-                "title": "$title",
-                "messageURL": "$msgurl",
-                "picURL": "$picurl"
-            }
+            ${all[*]}
         ]
     }
 }'
